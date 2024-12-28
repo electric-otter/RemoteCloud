@@ -58,6 +58,11 @@
 
 <h1>Welcome to the first bug-removed cloud service.</h1>
 
+<h2>Add File</h2>
+<input type="file" id="fileInput" />
+<button id="uploadButton">Upload File</button>
+<div id="message"></div>
+
 <h1>Storage Information</h1>
 <table id="storageTable">
     <thead>
@@ -78,6 +83,9 @@
             const data = await response.json();
             const tableBody = document.getElementById('storageTable').getElementsByTagName('tbody')[0];
 
+            // Clear existing rows
+            tableBody.innerHTML = '';
+
             data.forEach(item => {
                 const row = tableBody.insertRow();
                 const cellId = row.insertCell(0);
@@ -89,6 +97,40 @@
             console.error('Error fetching storage data:', error);
         }
     }
+
+    async function uploadFile() {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+        const messageDiv = document.getElementById('message');
+
+        if (!file) {
+            messageDiv.textContent = 'Please select a file to upload.';
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (response.ok) {
+                messageDiv.textContent = 'File uploaded successfully!';
+                fetchStorageData(); // Refresh the storage data
+            } else {
+                const errorData = await response.json();
+                messageDiv.textContent = `Error: ${errorData.error}`;
+            }
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            messageDiv.textContent = 'Error uploading file.';
+        }
+    }
+
+    document.getElementById('uploadButton').addEventListener('click', uploadFile);
 
     // Fetch storage data when the page loads
     window.onload = fetchStorageData;
